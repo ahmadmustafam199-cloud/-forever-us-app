@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAuthorizedSpouse(coupleId) {
+      let couple = get(/databases/$(database)/documents/couples/$(coupleId)).data;
+      return isSignedIn() && (
+        request.auth.uid == couple.husbandId ||
+        request.auth.uid == couple.wifeId
+      );
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == userId ||
+        (resource.data.coupleId != null && isAuthorizedSpouse(resource.data.coupleId))
+      );
+      allow create, update: if isSignedIn() && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    match /couples/{coupleId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.husbandId ||
+        request.auth.uid == resource.data.wifeId
+      );
+      allow create: if isSignedIn() && (
+        (request.resource.data.husbandId == request.auth.uid && request.resource.data.wifeId == null) ||
+        (request.resource.data.wifeId == request.auth.uid && request.resource.data.husbandId == null)
+      );
+      allow update: if isAuthorizedSpouse(coupleId) || (
+        isSignedIn() &&
+        ((resource.data.husbandId == null &&
+          request.resource.data.husbandId == request.auth.uid &&
+          request.resource.data.wifeId == resource.data.wifeId) ||
+         (resource.data.wifeId == null &&
+          request.resource.data.wifeId == request.auth.uid &&
+          request.resource.data.husbandId == resource.data.husbandId))
+      );
+      allow delete: if false;
+
+      match /{subcollection}/{docId} {
+        allow read, write: if isAuthorizedSpouse(coupleId);
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Forever Us ❤️",
+  "short_name": "Forever Us",
+  "description": "Two Hearts, One Private World — Private Couple Messaging Sanctuary",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D1126",
+  "theme_color": "#E84A7F",
+  "categories": ["social", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icons/app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
